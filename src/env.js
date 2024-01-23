@@ -11,11 +11,12 @@ export const env = createEnv({
       .string()
       .refine(
         (str) => !str.includes("YOUR_MYSQL_URL_HERE"),
-        "You forgot to change the default URL"
+        "You forgot to change the default URL",
       ),
     NODE_ENV: z
       .enum(["development", "test", "production"])
       .default("development"),
+    REPLICACHE_LICENSE_KEY: z.string(),
   },
 
   /**
@@ -34,6 +35,7 @@ export const env = createEnv({
   runtimeEnv: {
     DATABASE_URL: process.env.DATABASE_URL,
     NODE_ENV: process.env.NODE_ENV,
+    REPLICACHE_LICENSE_KEY: process.env.REPLICACHE_LICENSE_KEY,
     // NEXT_PUBLIC_CLIENTVAR: process.env.NEXT_PUBLIC_CLIENTVAR,
   },
   /**
