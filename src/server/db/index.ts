@@ -4,9 +4,13 @@ import { drizzle } from "drizzle-orm/better-sqlite3";
 import { env } from "~/env.js";
 import * as schema from "./schema";
 
-export const db = drizzle(
+export const serverID = 1;
+
+const db = drizzle(
   new Database(env.DATABASE_URL, {
     fileMustExist: false,
   }),
-  { schema }
+  { schema },
 );
+
+export default db;
