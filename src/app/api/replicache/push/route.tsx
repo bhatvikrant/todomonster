@@ -1,0 +1,57 @@
+/* eslint-disable @typescript-eslint/no-misused-promises */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+import { type NextRequest, NextResponse } from "next/server";
+import type { MutationV1, PushRequestV1 } from "replicache";
+import { processMutation, sendPoke } from "~/app/pushActions";
+import db from "~/server/db";
+
+export async function POST(request: NextRequest) {
+  let t0 = 0;
+  const affected = {
+    listIDs: new Set<string>(),
+    userIDs: new Set<string>(),
+  };
+  try {
+    const {
+      nextUrl: { searchParams },
+    } = request;
+    const userID = searchParams.get("userID") ?? "";
+    const push: PushRequestV1 = await request.json();
+    console.log("Processing push", JSON.stringify(push));
+    t0 = Date.now();
+
+    push.mutations.forEach(async (mutation: MutationV1) => {
+      const t1 = Date.now();
+      try {
+        const result = await db.transaction(() =>
+          processMutation(push.clientGroupID, userID, mutation),
+        );
+        result.affected.listIDs.forEach((affectedListID) => {
+          affected.listIDs.add(affectedListID);
+        });
+        result.affected.userIDs.forEach((affectedUserID) => {
+          affected.userIDs.add(affectedUserID);
+        });
+      } catch (error) {
+        console.log(error);
+        if (error instanceof Error) {
+          const errorMessage = error.message;
+          void db.transaction(() =>
+            processMutation(push.clientGroupID, userID, mutation, errorMessage),
+          );
+        }
+      }
+      console.log("Processed mutation in", Date.now() - t1);
+    });
+    await sendPoke();
+    const response = NextResponse.json({});
+    return response;
+  } catch (error: unknown) {
+    console.error((error as Error).message);
+    return new Response(JSON.stringify({ message: (error as Error).message }), {
+      status: 500,
+    });
+  } finally {
+    console.log("Processed push in", Date.now() - t0);
+  }
+}
