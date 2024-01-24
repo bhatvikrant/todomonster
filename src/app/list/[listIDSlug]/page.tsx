@@ -16,6 +16,8 @@ import Todo from "./Todo";
 import { useSubscribe } from "replicache-react";
 import { getList, todosByList } from "@replicache/mutators";
 import { type ReadTransaction } from "replicache";
+import Link from "next/link";
+import { ArrowLeft } from "lucide-react";
 
 const ListPage = () => {
   const { rep } = useReplicacheContext();
@@ -43,6 +45,13 @@ const ListPage = () => {
   };
   return (
     <div>
+      <Link href="/" className="group mb-4 flex items-center gap-2 text-xs">
+        <ArrowLeft className="h-3 w-3 text-slate-500 group-hover:text-slate-600" />
+        <span className="text-slate-500 group-hover:text-slate-600 group-hover:underline">
+          All lists
+        </span>
+      </Link>
+
       <Card className="w-[350px]">
         <CardHeader>
           <CardTitle className="capitalize">
