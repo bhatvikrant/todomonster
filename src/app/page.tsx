@@ -34,7 +34,7 @@ export default function HomePage() {
   const { rep, userID } = useReplicacheContext();
   const router = useRouter();
   const lists = useSubscribe(rep, listLists, { default: [] });
-  console.log("lists:", lists);
+  lists.sort((a, b) => (a.name.toLowerCase() < b.name.toLowerCase() ? -1 : 1));
 
   const handleSubmitList = async (listName: string) => {
     await handleNewList(rep, userID, listName, router);
