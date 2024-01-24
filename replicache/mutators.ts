@@ -1,5 +1,5 @@
 import { type ReadTransaction, type WriteTransaction } from "replicache";
-import { type List, type Share, type Todo, type TodoUpdate } from "./types";
+import { type List, type Todo, type TodoUpdate } from "./types";
 
 export const getList = async (tx: ReadTransaction, listID: string) => {
   const list = await tx.get(`list/${listID}`);
@@ -17,19 +17,6 @@ export const listLists = async (tx: ReadTransaction) => {
     .values()
     .toArray();
   return lists as List[] | [];
-};
-
-export const listShares = async (tx: ReadTransaction) => {
-  const shares = await tx
-    .scan({
-      prefix: "share/",
-      start: {
-        key: "share/",
-      },
-    })
-    .values()
-    .toArray();
-  return shares as Share[] | [];
 };
 
 const listTodos = async (tx: ReadTransaction) => {
@@ -54,8 +41,6 @@ export async function todosByList(tx: ReadTransaction, listID: string) {
 export type Mutators = {
   createList: (tx: WriteTransaction, list: List) => Promise<void>;
   deleteList: (tx: WriteTransaction, listID: string) => Promise<void>;
-  createShare: (tx: WriteTransaction, share: Share) => Promise<void>;
-  deleteShare: (tx: WriteTransaction, shareID: string) => Promise<void>;
   createTodo: (tx: WriteTransaction, todo: Omit<Todo, "sort">) => Promise<void>;
   updateTodo: (tx: WriteTransaction, todoUpdate: TodoUpdate) => Promise<void>;
   deleteTodo: (tx: WriteTransaction, todoID: string) => Promise<void>;
@@ -67,12 +52,6 @@ const mutators = {
   },
   deleteList: async (tx: WriteTransaction, listID: string) => {
     await tx.del(`list/${listID}`);
-  },
-  createShare: async (tx: WriteTransaction, share: Share) => {
-    await tx.set(`share/${share.id}`, share);
-  },
-  deleteShare: async (tx: WriteTransaction, shareID: string) => {
-    await tx.del(`share/${shareID}`);
   },
   createTodo: async (tx: WriteTransaction, todo: Omit<Todo, "sort">) => {
     const todos = await listTodos(tx);

@@ -8,17 +8,14 @@ import type {
   ClientGroupRecord,
   ClientRecord,
   List as ReplicacheList,
-  Share,
   Todo,
 } from "@replicache/types";
 
 import { getClientGroupForUpdate, putClientGroup } from "./sharedActions";
 import {
   createList,
-  createShare,
   createTodo,
   deleteList,
-  deleteShare,
   deleteTodo,
   updateTodo,
 } from "./appActions";
@@ -63,10 +60,6 @@ function mutate(userID: string, mutation: MutationV1): Affected {
       return deleteList(userID, mutation.args as string);
     case "createTodo":
       return createTodo(userID, mutation.args as Omit<Todo, "sort">);
-    case "createShare":
-      return createShare(userID, mutation.args as Share);
-    case "deleteShare":
-      return deleteShare(userID, mutation.args as string);
     case "updateTodo":
       return updateTodo(userID, mutation.args as Todo);
     case "deleteTodo":

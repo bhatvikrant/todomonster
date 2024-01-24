@@ -28,7 +28,6 @@ import { listLists } from "@replicache/mutators";
 import { useSubscribe } from "replicache-react";
 import Link from "next/link";
 import getRandomQuote from "~/lib/quotes";
-import Image from "next/image";
 
 export default function HomePage() {
   const { rep, userID } = useReplicacheContext();

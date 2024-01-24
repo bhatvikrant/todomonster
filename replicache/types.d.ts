@@ -1,19 +1,19 @@
 export type Affected = {
   listIDs: string[];
   userIDs: string[];
-}
+};
 
 export type Cookie = {
   order: number;
   clientGroupID: string;
-}
+};
 
 export type SearchResult = {
   id: string;
   rowVersion: number;
-}
+};
 
-type ClientViewData = Map<string, number>
+type ClientViewData = Map<string, number>;
 
 /**
  * A Client View Record (CVR) is a minimal representation of a Client View snapshot.
@@ -22,9 +22,8 @@ type ClientViewData = Map<string, number>
 export type ClientViewRecord = {
   list: ClientViewData;
   todo: ClientViewData;
-  share: ClientViewData;
   clientVersion: number;
-}
+};
 
 /**
  * One CVR is generated for each pull response and stored in some ephemeral storage.
@@ -44,14 +43,14 @@ export type ClientGroupRecord = {
   userID?;
   clientGroupVersion: number;
   cvrVersion: number | null;
-}
+};
 
 export type ClientRecord = {
   id: string;
   clientGroupID: string;
   lastMutationID: number;
   clientVersion: number;
-}
+};
 
 export type Todo = {
   id: string;
@@ -59,18 +58,12 @@ export type Todo = {
   text: string;
   complete: boolean;
   sort: number;
-}
+};
 
-export type TodoUpdate = { id: string } & Partial<Todo>
-
-export type Share = {
-  id: string;
-  listID: string;
-  userID: string;
-}
+export type TodoUpdate = { id: string } & Partial<Todo>;
 
 export type List = {
-  id: string,
-  name: string,
-  ownerID: string,
-}
+  id: string;
+  name: string;
+  ownerID: string;
+};

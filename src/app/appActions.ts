@@ -1,12 +1,12 @@
 import db from "~/server/db";
-import { item, list, share } from "~/server/db/schema";
+import { item, list } from "~/server/db/schema";
 import { and, eq, inArray, or, sql } from "drizzle-orm";
 import type {
   List,
   List as ReplicacheList,
   TodoUpdate,
 } from "replicache/types";
-import type { Affected, Todo, Share, SearchResult } from "@replicache/types";
+import type { Affected, Todo, SearchResult } from "@replicache/types";
 import { union, unionAll } from "drizzle-orm/sqlite-core";
 
 export function getPutsSince(
@@ -90,25 +90,13 @@ export function createList(userID: string, listToInsert: ReplicacheList) {
 }
 
 export function searchLists(accessibleByUserID: string): SearchResult[] {
-  const shareRowStatementSubquery = db
-    .select({
-      id: share.listID,
-    })
-    .from(share)
-    .where(eq(share.userID, accessibleByUserID));
-
   const listRowStatementQuery = db
     .select({
       id: list.id,
       rowVersion: list.rowVersion,
     })
     .from(list)
-    .where(
-      or(
-        eq(list.ownerID, accessibleByUserID),
-        inArray(list.id, shareRowStatementSubquery),
-      ),
-    )
+    .where(or(eq(list.ownerID, accessibleByUserID)))
     .prepare();
 
   const listRows = listRowStatementQuery.all();
@@ -119,16 +107,6 @@ export function searchLists(accessibleByUserID: string): SearchResult[] {
 export function searchTodosAndShares(listIDs: string[]) {
   if (listIDs.length === 0) return { shareMeta: [], todoMeta: [] };
 
-  const shareStatementQuery = db
-    .select({
-      id: share.id,
-      rowVersion: share.rowVersion,
-      type: sql<string>`'shareMeta'`,
-    })
-    .from(share)
-    .innerJoin(list, eq(share.listID, list.id))
-    .where(inArray(list.id, listIDs));
-
   const todoStatementQuery = db
     .select({
       id: item.id,
@@ -138,9 +116,7 @@ export function searchTodosAndShares(listIDs: string[]) {
     .from(item)
     .where(inArray(item.listID, listIDs));
 
-  const sharesAndTodos = unionAll(shareStatementQuery, todoStatementQuery)
-    .prepare()
-    .all();
+  const sharesAndTodos = todoStatementQuery.prepare().all();
 
   const result: {
     shareMeta: { id: string; rowVersion: number }[];
@@ -159,23 +135,10 @@ export function searchTodosAndShares(listIDs: string[]) {
 }
 
 function requireAccessToList(listID: string, accessingUserID: string) {
-  const shareListIdSubquery = db
-    .select({ listID: share.listID })
-    .from(share)
-    .where(eq(share.userID, accessingUserID));
-
   const listRowStatementQuery = db
     .select({ numberOfRows: sql<number>`count(*)` })
     .from(list)
-    .where(
-      and(
-        eq(list.id, listID),
-        or(
-          eq(list.ownerID, accessingUserID),
-          inArray(list.id, shareListIdSubquery),
-        ),
-      ),
-    )
+    .where(and(eq(list.id, listID), or(eq(list.ownerID, accessingUserID))))
     .prepare();
 
   const [{ numberOfRows }] = listRowStatementQuery.all();
@@ -191,14 +154,7 @@ function getAccessors(listID: string) {
     .from(list)
     .where(eq(list.id, listID));
 
-  const userIDStatementQuery = db
-    .select({ userID: share.userID })
-    .from(share)
-    .where(eq(share.listID, listID));
-
-  const userIdRows = union(ownerIDStatementQuery, userIDStatementQuery)
-    .prepare()
-    .all();
+  const userIdRows = ownerIDStatementQuery.prepare().all();
 
   return userIdRows.map((row: { userID: string }) => row.userID);
 }
@@ -247,78 +203,6 @@ export function createTodo(userID: string, todo: Omit<Todo, "sort">) {
   insertItemStatementQuery.run();
 
   return { listIDs: [todo.listID], userIDs: [] };
-}
-
-export function createShare(userIDForAccess: string, shareToInsert: Share) {
-  requireAccessToList(shareToInsert.listID, userIDForAccess);
-  const { id, listID, userID } = shareToInsert;
-  const insertShareStatementQuery = db
-    .insert(share)
-    .values({
-      id,
-      listID,
-      userID,
-      rowVersion: 1,
-      lastModified: new Date(),
-    })
-    .prepare();
-
-  insertShareStatementQuery.run();
-
-  return {
-    listIDs: [listID],
-    userIDs: [userID],
-  };
-}
-
-export function getShares(shareIDs: string[]) {
-  if (shareIDs.length === 0) return [];
-
-  const shareRowStatementQuery = db
-    .select({
-      id: share.id,
-      listID: share.listID,
-      userID: share.userID,
-    })
-    .from(share)
-    .where(inArray(share.id, shareIDs))
-    .prepare();
-
-  const shareRows = shareRowStatementQuery.all();
-
-  const shares = shareRows
-    ? shareRows.map((row) => {
-        const shareToGet: Share = {
-          id: row.id,
-          listID: row.listID,
-          userID: row.userID,
-        };
-        return shareToGet;
-      })
-    : [];
-  return shares;
-}
-
-export function deleteShare(userIDForAccess: string, id: string): Affected {
-  const [shareToDelete] = getShares([id]);
-  if (!shareToDelete) {
-    throw new Error("Specified share doesn't exist");
-  }
-
-  const { listID, userID } = shareToDelete;
-
-  requireAccessToList(listID, userIDForAccess);
-  const deleteShareQueryStatement = db
-    .delete(share)
-    .where(eq(share.id, id))
-    .prepare();
-
-  deleteShareQueryStatement.run();
-
-  return {
-    listIDs: [listID],
-    userIDs: [userID],
-  };
 }
 
 export function getTodos(todoIDs: string[]) {

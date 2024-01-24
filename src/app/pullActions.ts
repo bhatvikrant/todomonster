@@ -14,13 +14,11 @@ import type {
   ClientViewRecord,
   List,
   SearchResult,
-  Share,
   Todo,
 } from "@replicache/types";
 import { getClientGroupForUpdate, putClientGroup } from "./sharedActions";
 import {
   getTodos,
-  getShares,
   getLists,
   getPutsSince,
   getDelsSince,
@@ -107,7 +105,6 @@ function pullForChanges(
   nextCVR: ClientViewRecord;
   clientChanges: ClientRecord[];
   lists: List[];
-  shares: Share[];
   todos: Todo[];
 } {
   const baseClientGroupRecord = getClientGroupForUpdate(clientGroupID);
@@ -116,17 +113,15 @@ function pullForChanges(
 
   const listIDs = listMeta.map((listRow) => listRow.id);
 
-  const { shareMeta, todoMeta } = searchTodosAndShares(listIDs);
+  const { todoMeta } = searchTodosAndShares(listIDs);
 
   const nextCVR: ClientViewRecord = {
     list: fromSearchResult(listMeta),
     todo: fromSearchResult(todoMeta),
-    share: fromSearchResult(shareMeta),
     clientVersion: baseClientGroupRecord.clientGroupVersion,
   };
 
   const listPuts = getPutsSince(nextCVR.list, baseCVR.list);
-  const sharePuts = getPutsSince(nextCVR.share, baseCVR.share);
   const todoPuts = getPutsSince(nextCVR.todo, baseCVR.todo);
 
   let previousCVRVersion = baseClientGroupRecord.cvrVersion;
@@ -152,13 +147,11 @@ function pullForChanges(
 
   console.log({
     listPuts,
-    sharePuts,
     todoPuts,
     nextClientGroupRecord,
   });
 
   const lists = getLists(listPuts);
-  const shares = getShares(sharePuts);
   const todos = getTodos(todoPuts);
   putClientGroup(nextClientGroupRecord);
 
@@ -167,7 +160,6 @@ function pullForChanges(
     nextCVR,
     clientChanges,
     lists,
-    shares,
     todos,
   };
 }
@@ -176,8 +168,7 @@ function getPatch(
   previousCVR: ClientViewRecord | undefined,
   listDels: string[],
   lists: List[],
-  shareDels: string[],
-  shares: Share[],
+
   todoDels: string[],
   todos: Todo[],
 ): PatchOperation[] {
@@ -193,14 +184,6 @@ function getPatch(
 
   lists.forEach((listItem) => {
     patch.push({ op: "put", key: `list/${listItem.id}`, value: listItem });
-  });
-
-  shareDels.forEach((id) => {
-    patch.push({ op: "del", key: `share/${id}` });
-  });
-
-  shares.forEach((shareItem) => {
-    patch.push({ op: "put", key: `share/${shareItem.id}`, value: shareItem });
   });
 
   todoDels.forEach((id) => {
@@ -219,26 +202,18 @@ function processPull(pull: PullRequestV1, userID: string): PullResponseV1 {
   const replicacheCookie = cookie as Cookie;
   const { previousCVR, baseCVR } = getBaseCVR(clientGroupID, replicacheCookie);
 
-  const { nextCVRVersion, nextCVR, clientChanges, lists, shares, todos } =
+  const { nextCVRVersion, nextCVR, clientChanges, lists, todos } =
     db.transaction(() =>
       pullForChanges(clientGroupID, baseCVR, userID, replicacheCookie),
     );
 
   const listDels = getDelsSince(nextCVR.list, baseCVR.list);
-  const shareDels = getDelsSince(nextCVR.share, baseCVR.share);
+
   const todoDels = getDelsSince(nextCVR.todo, baseCVR.todo);
 
-  console.log({ listDels, shareDels, todoDels });
+  console.log({ listDels, todoDels });
 
-  const patch = getPatch(
-    previousCVR,
-    listDels,
-    lists,
-    shareDels,
-    shares,
-    todoDels,
-    todos,
-  );
+  const patch = getPatch(previousCVR, listDels, lists, todoDels, todos);
 
   const responseCookie: Cookie = {
     clientGroupID,

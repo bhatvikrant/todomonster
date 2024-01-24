@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-misused-promises */
 // Define event handlers and connect them to Replicache mutators. Each
 // of these mutators runs immediately (optimistically) locally, then runs
 
@@ -81,28 +82,5 @@ export const handleDeleteList = async (
   if (rep) {
     await rep.mutate.deleteList(listID);
     router.push("/");
-  }
-};
-
-export const handleNewShare = async (
-  rep: Replicache<Mutators> | null,
-  listID: string,
-  userID: string,
-) => {
-  if (rep) {
-    await rep.mutate.createShare({
-      id: nanoid(),
-      listID,
-      userID,
-    });
-  }
-};
-
-export const handleDeleteShare = async (
-  rep: Replicache<Mutators> | null,
-  shareID: string,
-) => {
-  if (rep) {
-    await rep.mutate.deleteShare(shareID);
   }
 };

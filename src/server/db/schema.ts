@@ -49,17 +49,6 @@ export const list = sqliteTable("list", {
 export type List = InferSelectModel<typeof list>;
 export type InsertList = InferInsertModel<typeof list>;
 
-export const share = sqliteTable("share", {
-  id: text("id").primaryKey().notNull(),
-  listID: text("list_id").notNull(),
-  userID: text("user_id").notNull(),
-  rowVersion: integer("row_version").notNull(),
-  lastModified: integer("last_modified", { mode: "timestamp_ms" }).notNull(),
-});
-
-export type Share = InferSelectModel<typeof share>;
-export type InsertShare = InferInsertModel<typeof share>;
-
 export const item = sqliteTable("item", {
   id: text("id").primaryKey().notNull(),
   listID: text("list_id").notNull(),
