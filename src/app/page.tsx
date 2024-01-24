@@ -77,7 +77,7 @@ export default function HomePage() {
               />
             </g>
           </svg>
-          <span>Todomonster</span>
+          <span>TodoMonster</span>
         </div>
         <div className="relative z-20 mt-auto">
           <blockquote className="space-y-2">
