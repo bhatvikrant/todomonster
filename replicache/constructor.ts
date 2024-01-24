@@ -11,7 +11,7 @@ const getRowVersioningReplicache = (): Replicache<Mutators> | null => {
     typeof window !== "undefined"
       ? new Replicache({
           name: "unique-and-user-specific-replicache-database-name",
-          licenseKey: env.REPLICACHE_LICENSE_KEY,
+          licenseKey: env.NEXT_PUBLIC_REPLICACHE_LICENSE_KEY,
           pushURL: "/api/replicache/push",
           pullURL: "/api/replicache/pull",
           mutators,

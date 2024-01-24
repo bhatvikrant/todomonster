@@ -16,7 +16,6 @@ export const env = createEnv({
     NODE_ENV: z
       .enum(["development", "test", "production"])
       .default("development"),
-    REPLICACHE_LICENSE_KEY: z.string(),
   },
 
   /**
@@ -26,6 +25,7 @@ export const env = createEnv({
    */
   client: {
     // NEXT_PUBLIC_CLIENTVAR: z.string(),
+    NEXT_PUBLIC_REPLICACHE_LICENSE_KEY: z.string(),
   },
 
   /**
@@ -35,7 +35,8 @@ export const env = createEnv({
   runtimeEnv: {
     DATABASE_URL: process.env.DATABASE_URL,
     NODE_ENV: process.env.NODE_ENV,
-    REPLICACHE_LICENSE_KEY: process.env.REPLICACHE_LICENSE_KEY,
+    NEXT_PUBLIC_REPLICACHE_LICENSE_KEY:
+      process.env.NEXT_PUBLIC_REPLICACHE_LICENSE_KEY,
     // NEXT_PUBLIC_CLIENTVAR: process.env.NEXT_PUBLIC_CLIENTVAR,
   },
   /**

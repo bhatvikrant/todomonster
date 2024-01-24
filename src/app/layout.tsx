@@ -2,6 +2,7 @@ import "~/styles/globals.css";
 
 import { Inter as FontSans } from "next/font/google";
 import { ReplicacheContextProvider } from "~/lib/create-replicache-context";
+import { cn } from "~/lib/utils";
 
 const fontSans = FontSans({
   subsets: ["latin"],
@@ -22,10 +23,10 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body
-      //  className={cn(
-      //   "min-h-screen bg-background font-sans antialiased",
-      //   fontSans.variable,
-      // )}
+        className={cn(
+          "min-h-screen bg-background font-sans antialiased",
+          fontSans.variable,
+        )}
       >
         <ReplicacheContextProvider>{children}</ReplicacheContextProvider>
       </body>
