@@ -8,7 +8,7 @@ export const serverID = 1;
 
 const db = drizzle(
   new Database(env.DATABASE_URL, {
-    fileMustExist: false,
+    // fileMustExist: false,
   }),
   { schema },
 );
