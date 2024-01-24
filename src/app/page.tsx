@@ -112,7 +112,7 @@ export default function HomePage() {
                 <div key={list.id} className="flex justify-between">
                   <Link href={`/list/${list.id}`} className="group">
                     {idx + 1}.{" "}
-                    <span className="capitalize group-hover:underline">
+                    <span className="text-sm capitalize leading-none transition-all duration-300 group-hover:underline peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
                       {list.name}
                     </span>
                   </Link>
