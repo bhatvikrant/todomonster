@@ -71,6 +71,9 @@ const ListPage = () => {
             <Todo key={todo.id} todo={todo} rep={rep} />
           ))}
         </CardContent>
+        <p className="mx-6 mb-2 text-xs italic text-slate-500">
+          {todos.filter((todo) => !todo.complete).length} item(s) left
+        </p>
       </Card>
 
       <form
