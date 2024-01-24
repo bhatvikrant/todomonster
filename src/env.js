@@ -16,6 +16,7 @@ export const env = createEnv({
     NODE_ENV: z
       .enum(["development", "test", "production"])
       .default("development"),
+    GITHUB_PAT: z.string(),
   },
 
   /**
@@ -37,6 +38,7 @@ export const env = createEnv({
     NODE_ENV: process.env.NODE_ENV,
     NEXT_PUBLIC_REPLICACHE_LICENSE_KEY:
       process.env.NEXT_PUBLIC_REPLICACHE_LICENSE_KEY,
+    GITHUB_PAT: process.env.GITHUB_PAT,
     // NEXT_PUBLIC_CLIENTVAR: process.env.NEXT_PUBLIC_CLIENTVAR,
   },
   /**
