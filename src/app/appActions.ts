@@ -169,6 +169,18 @@ export function deleteList(userID: string, listID: string): Affected {
 
   deleteListStatementQuery.run();
 
+  db.select({
+    id: item.id,
+  })
+    .from(item)
+    .where(eq(item.listID, listID))
+    .then((items) => {
+      items.forEach((item) => {
+        deleteTodo(userID, item.id, true);
+      });
+    })
+    .catch(console.log);
+
   return {
     listIDs: [],
     userIDs,
@@ -201,6 +213,7 @@ export function createTodo(userID: string, todo: Omit<Todo, "sort">) {
     .prepare();
 
   insertItemStatementQuery.run();
+  addToQstash({ type: "createTodo", data: todo, userID });
 
   return { listIDs: [todo.listID], userIDs: [] };
 }
@@ -263,6 +276,7 @@ export function updateTodo(userID: string, todoToUpdate: TodoUpdate): Affected {
     .prepare();
 
   updateItemStatementQuery.run();
+  addToQstash({ type: "updateTodo", data: todoToUpdate, userID });
 
   return {
     listIDs: [listID],
@@ -270,18 +284,47 @@ export function updateTodo(userID: string, todoToUpdate: TodoUpdate): Affected {
   };
 }
 
-export function deleteTodo(userID: string, todoID: string): Affected {
+export function deleteTodo(
+  userID: string,
+  todoID: string,
+  skipAccessCheck = false, // Todo: remove this check later once you have a fix
+): Affected {
   const { listID } = mustGetTodo(todoID);
-  requireAccessToList(listID, userID);
+  if (!skipAccessCheck) {
+    requireAccessToList(listID, userID);
+  }
   const deleteTodoStatementQuery = db
     .delete(item)
     .where(eq(item.id, todoID))
     .prepare();
 
   deleteTodoStatementQuery.run();
+  addToQstash({ type: "deleteTodo", data: { id: todoID }, userID });
 
   return {
     listIDs: [listID],
     userIDs: [],
   };
+}
+
+function addToQstash({
+  type,
+  data,
+  userID,
+}: {
+  type: "createTodo" | "updateTodo" | "deleteTodo";
+  data: Partial<Todo>;
+  userID: string;
+}) {
+  void fetch("http://localhost:3000/api/qstash/add-to-queue", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      type,
+      data,
+      userID,
+    }),
+  });
 }

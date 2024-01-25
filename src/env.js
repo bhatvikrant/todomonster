@@ -17,6 +17,10 @@ export const env = createEnv({
       .enum(["development", "test", "production"])
       .default("development"),
     GITHUB_PAT: z.string(),
+    QSTASH_URL: z.string(),
+    QSTASH_TOKEN: z.string(),
+    QSTASH_CURRENT_SIGNING_KEY: z.string(),
+    QSTASH_NEXT_SIGNING_KEY: z.string(),
   },
 
   /**
@@ -39,6 +43,10 @@ export const env = createEnv({
     NEXT_PUBLIC_REPLICACHE_LICENSE_KEY:
       process.env.NEXT_PUBLIC_REPLICACHE_LICENSE_KEY,
     GITHUB_PAT: process.env.GITHUB_PAT,
+    QSTASH_URL: process.env.QSTASH_URL,
+    QSTASH_TOKEN: process.env.QSTASH_TOKEN,
+    QSTASH_CURRENT_SIGNING_KEY: process.env.QSTASH_CURRENT_SIGNING_KEY,
+    QSTASH_NEXT_SIGNING_KEY: process.env.QSTASH_NEXT_SIGNING_KEY,
     // NEXT_PUBLIC_CLIENTVAR: process.env.NEXT_PUBLIC_CLIENTVAR,
   },
   /**

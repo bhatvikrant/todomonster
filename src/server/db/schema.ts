@@ -61,3 +61,10 @@ export const item = sqliteTable("item", {
 
 export type Item = InferSelectModel<typeof item>;
 export type InsertItem = InferInsertModel<typeof item>;
+
+export const todoIssueMapping = sqliteTable("todo_issue_mapping", {
+  id: text("id").primaryKey().notNull(),
+  todoID: text("todo_id").notNull(),
+  issueNodeID: text("issue_node_id").notNull(),
+  issueNumber: integer("issue_number").notNull(),
+});
