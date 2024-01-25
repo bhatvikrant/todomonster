@@ -3,6 +3,7 @@ import "~/styles/globals.css";
 import { Inter as FontSans } from "next/font/google";
 import { ReplicacheContextProvider } from "~/lib/create-replicache-context";
 import { cn } from "~/lib/utils";
+import UILayout from "~/components/custom/UILayout";
 
 const fontSans = FontSans({
   subsets: ["latin"],
@@ -10,7 +11,7 @@ const fontSans = FontSans({
 });
 
 export const metadata = {
-  title: "Todomonster | Your todo list for the day",
+  title: "TodoMonster | Your todo list for the day",
   description: "Start your day with a todo list",
   icons: [{ rel: "icon", url: "/favicon.ico" }],
 };
@@ -59,7 +60,7 @@ export default function RootLayout({
                 fill="url(#83fd4e5a-9d52-42fc-97b6-718e5d7ee527)"
               />
             </svg>
-            {children}
+            <UILayout>{children}</UILayout>
           </div>
         </ReplicacheContextProvider>
       </body>
