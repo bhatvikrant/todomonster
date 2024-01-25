@@ -7,7 +7,6 @@ import type {
   TodoUpdate,
 } from "replicache/types";
 import type { Affected, Todo, SearchResult } from "@replicache/types";
-import { union, unionAll } from "drizzle-orm/sqlite-core";
 
 export function getPutsSince(
   nextData: Map<string, number>,
@@ -141,9 +140,9 @@ function requireAccessToList(listID: string, accessingUserID: string) {
     .where(and(eq(list.id, listID), or(eq(list.ownerID, accessingUserID))))
     .prepare();
 
-  const [{ numberOfRows }] = listRowStatementQuery.all();
+  const [response] = listRowStatementQuery.all();
 
-  if (numberOfRows === 0) {
+  if (response?.numberOfRows === 0) {
     throw new Error("Authorization error, can't access list");
   }
 }
