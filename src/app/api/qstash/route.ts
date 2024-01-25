@@ -132,6 +132,7 @@ async function handleGithubIssuManipulation({ type, data, userID }: BodyType) {
       }
     }
     default:
+      // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
       return { message: `Unknown type: ${type}`, status: 500, success: false };
   }
 }
