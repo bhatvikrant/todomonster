@@ -53,7 +53,7 @@ function getBaseCVR(clientGroupID: string, cookie: Cookie) {
     clientVersion: 0,
   };
 
-  console.log({ previousCVR, baseCVR });
+  // console.log({ previousCVR, baseCVR });
 
   return { previousCVR, baseCVR };
 }
@@ -220,7 +220,7 @@ async function processPull(
 
   const todoDels = getDelsSince(nextCVR.todo, baseCVR.todo);
 
-  console.log({ listDels, todoDels });
+  // console.log({ listDels, todoDels });
 
   const patch = getPatch(previousCVR, listDels, lists, todoDels, todos);
 
