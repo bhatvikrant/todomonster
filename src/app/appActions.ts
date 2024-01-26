@@ -220,10 +220,8 @@ export async function createTodo(userID: string, todo: Omit<Todo, "sort">) {
     })
     .prepare();
 
-  await Promise.all([
-    insertItemStatementQuery.execute(),
-    addToQstash({ type: "createTodo", data: todo, userID }),
-  ]);
+  await insertItemStatementQuery.execute();
+  await addToQstash({ type: "createTodo", data: todo, userID });
 
   return { listIDs: [todo.listID], userIDs: [] };
 }
@@ -288,10 +286,8 @@ export async function updateTodo(
     .where(eq(item.id, id))
     .prepare();
 
-  await Promise.all([
-    updateItemStatementQuery.execute(),
-    addToQstash({ type: "updateTodo", data: todoToUpdate, userID }),
-  ]);
+  await updateItemStatementQuery.execute();
+  await addToQstash({ type: "updateTodo", data: todoToUpdate, userID });
 
   return {
     listIDs: [listID],
@@ -313,10 +309,8 @@ export async function deleteTodo(
     .where(eq(item.id, todoID))
     .prepare();
 
-  await Promise.all([
-    deleteTodoStatementQuery.execute(),
-    addToQstash({ type: "deleteTodo", data: { id: todoID }, userID }),
-  ]);
+  await deleteTodoStatementQuery.execute();
+  await addToQstash({ type: "deleteTodo", data: { id: todoID }, userID });
 
   return {
     listIDs: [listID],
