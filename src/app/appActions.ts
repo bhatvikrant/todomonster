@@ -327,7 +327,7 @@ function addToQstash({
   data: Partial<Todo>;
   userID: string;
 }) {
-  void fetch("http://localhost:3000/api/qstash/add-to-queue", {
+  void fetch("/api/qstash/add-to-queue", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
