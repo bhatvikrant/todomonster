@@ -333,7 +333,8 @@ async function addToQstash({
   data: Partial<Todo>;
   userID: string;
 }) {
-  await fetch("/api/qstash/add-to-queue", {
+  await fetch("https://todomonster.vikrantbhat.com/api/qstash/add-to-queue", {
+    // Todo: make the base url dynamic using env variables
     method: "POST",
     headers: {
       "Content-Type": "application/json",
