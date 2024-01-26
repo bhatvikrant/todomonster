@@ -4,7 +4,7 @@ import { eq } from "drizzle-orm";
 import db from "~/server/db";
 import { replicacheClientGroup } from "~/server/db/schema";
 
-export function putClientGroup(clientGroup: ClientGroupRecord) {
+export async function putClientGroup(clientGroup: ClientGroupRecord) {
   const { id, cvrVersion, clientGroupVersion } = clientGroup;
   const insertClientGroupStatementQuery = db
     .insert(replicacheClientGroup)
@@ -14,20 +14,22 @@ export function putClientGroup(clientGroup: ClientGroupRecord) {
       clientGroupVersion,
       lastModified: new Date(),
     })
-    .onConflictDoUpdate({
-      target: replicacheClientGroup.id,
+    .onDuplicateKeyUpdate({
       set: {
         cvrVersion,
         clientGroupVersion,
         lastModified: new Date(),
       },
     })
+
     .prepare();
 
-  insertClientGroupStatementQuery.run();
+  await insertClientGroupStatementQuery.execute();
 }
 
-function getClientGroup(clientGroupID: string): Omit<ClientGroupRecord, "id"> {
+async function getClientGroup(
+  clientGroupID: string,
+): Promise<Omit<ClientGroupRecord, "id">> {
   const clientGroupRowStatementQuery = db
     .select({
       cvrVersion: replicacheClientGroup.cvrVersion,
@@ -37,7 +39,7 @@ function getClientGroup(clientGroupID: string): Omit<ClientGroupRecord, "id"> {
     .where(eq(replicacheClientGroup.id, clientGroupID))
     .prepare();
 
-  const clientGroupRow = clientGroupRowStatementQuery.get() ?? {
+  const clientGroupRow = (await clientGroupRowStatementQuery.execute())[0] ?? {
     clientGroupVersion: 0,
     cvrVersion: null,
   };
@@ -45,10 +47,10 @@ function getClientGroup(clientGroupID: string): Omit<ClientGroupRecord, "id"> {
   return clientGroupRow;
 }
 
-export function getClientGroupForUpdate(
+export async function getClientGroupForUpdate(
   clientGroupID: string,
-): ClientGroupRecord {
-  const previousClientGroup = getClientGroup(clientGroupID);
+): Promise<ClientGroupRecord> {
+  const previousClientGroup = await getClientGroup(clientGroupID);
   return {
     id: clientGroupID,
     clientGroupVersion: previousClientGroup.clientGroupVersion,

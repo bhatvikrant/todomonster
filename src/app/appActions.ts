@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-misused-promises */
 import db from "~/server/db";
 import { item, list } from "~/server/db/schema";
 import { and, eq, inArray, or, sql } from "drizzle-orm";
@@ -35,7 +36,7 @@ export function getDelsSince(
   return dels;
 }
 
-export function getLists(listIDs: string[]) {
+export async function getLists(listIDs: string[]) {
   if (listIDs.length === 0) return [];
   const listStatemenetQuery = db
     .select({
@@ -47,7 +48,7 @@ export function getLists(listIDs: string[]) {
     .where(inArray(list.id, listIDs))
     .prepare();
 
-  const listRows = listStatemenetQuery.all();
+  const listRows = await listStatemenetQuery.execute();
   const lists = listRows.map((row) => {
     const listItem: List = {
       id: row.id,
@@ -67,7 +68,7 @@ export type ListAndID = {
   lastModified: number;
 };
 
-export function createList(userID: string, listToInsert: ReplicacheList) {
+export async function createList(userID: string, listToInsert: ReplicacheList) {
   if (userID !== listToInsert.ownerID) {
     throw new Error("Authorization error, cannot create list for other user");
   }
@@ -83,12 +84,14 @@ export function createList(userID: string, listToInsert: ReplicacheList) {
     })
     .prepare();
 
-  insertListStatementQuery.run();
+  await insertListStatementQuery.execute();
 
   return { listIDs: [], userIDs: [ownerID] };
 }
 
-export function searchLists(accessibleByUserID: string): SearchResult[] {
+export async function searchLists(
+  accessibleByUserID: string,
+): Promise<SearchResult[]> {
   const listRowStatementQuery = db
     .select({
       id: list.id,
@@ -98,12 +101,12 @@ export function searchLists(accessibleByUserID: string): SearchResult[] {
     .where(or(eq(list.ownerID, accessibleByUserID)))
     .prepare();
 
-  const listRows = listRowStatementQuery.all();
+  const listRows = await listRowStatementQuery.execute();
 
   return listRows;
 }
 
-export function searchTodosAndShares(listIDs: string[]) {
+export async function searchTodosAndShares(listIDs: string[]) {
   if (listIDs.length === 0) return { shareMeta: [], todoMeta: [] };
 
   const todoStatementQuery = db
@@ -115,7 +118,7 @@ export function searchTodosAndShares(listIDs: string[]) {
     .from(item)
     .where(inArray(item.listID, listIDs));
 
-  const sharesAndTodos = todoStatementQuery.prepare().all();
+  const sharesAndTodos = await todoStatementQuery.prepare().execute();
 
   const result: {
     shareMeta: { id: string; rowVersion: number }[];
@@ -133,49 +136,53 @@ export function searchTodosAndShares(listIDs: string[]) {
   return result;
 }
 
-function requireAccessToList(listID: string, accessingUserID: string) {
+async function requireAccessToList(listID: string, accessingUserID: string) {
   const listRowStatementQuery = db
     .select({ numberOfRows: sql<number>`count(*)` })
     .from(list)
     .where(and(eq(list.id, listID), or(eq(list.ownerID, accessingUserID))))
     .prepare();
 
-  const [response] = listRowStatementQuery.all();
+  const [response] = await listRowStatementQuery.execute();
 
   if (response?.numberOfRows === 0) {
     throw new Error("Authorization error, can't access list");
   }
 }
 
-function getAccessors(listID: string) {
+async function getAccessors(listID: string) {
   const ownerIDStatementQuery = db
     .select({ userID: list.ownerID })
     .from(list)
     .where(eq(list.id, listID));
 
-  const userIdRows = ownerIDStatementQuery.prepare().all();
+  const userIdRows = await ownerIDStatementQuery.prepare().execute();
 
   return userIdRows.map((row: { userID: string }) => row.userID);
 }
 
-export function deleteList(userID: string, listID: string): Affected {
-  requireAccessToList(listID, userID);
-  const userIDs = getAccessors(listID);
+export async function deleteList(
+  userID: string,
+  listID: string,
+): Promise<Affected> {
+  await requireAccessToList(listID, userID);
+  const userIDs = await getAccessors(listID);
   const deleteListStatementQuery = db
     .delete(list)
     .where(eq(list.id, listID))
     .prepare();
 
-  deleteListStatementQuery.run();
+  await deleteListStatementQuery.execute();
 
-  db.select({
-    id: item.id,
-  })
+  await db
+    .select({
+      id: item.id,
+    })
     .from(item)
     .where(eq(item.listID, listID))
     .then((items) => {
-      items.forEach((item) => {
-        deleteTodo(userID, item.id, true);
+      items.forEach(async (item) => {
+        await deleteTodo(userID, item.id, true);
       });
     })
     .catch(console.log);
@@ -186,15 +193,17 @@ export function deleteList(userID: string, listID: string): Affected {
   };
 }
 
-export function createTodo(userID: string, todo: Omit<Todo, "sort">) {
-  requireAccessToList(todo.listID, userID);
+export async function createTodo(userID: string, todo: Omit<Todo, "sort">) {
+  await requireAccessToList(todo.listID, userID);
   const maxOrdRowStatementQuery = db
     .select({ maxOrd: sql<number>`max(${item.ord})` })
     .from(item)
     .where(eq(item.listID, todo.listID))
     .prepare();
 
-  const { maxOrd } = maxOrdRowStatementQuery.get() ?? { maxOrd: 0 };
+  const { maxOrd } = (await maxOrdRowStatementQuery.execute())[0] ?? {
+    maxOrd: 0,
+  };
 
   const { id, listID, text, complete } = todo;
 
@@ -211,13 +220,13 @@ export function createTodo(userID: string, todo: Omit<Todo, "sort">) {
     })
     .prepare();
 
-  insertItemStatementQuery.run();
+  await insertItemStatementQuery.execute();
   addToQstash({ type: "createTodo", data: todo, userID });
 
   return { listIDs: [todo.listID], userIDs: [] };
 }
 
-export function getTodos(todoIDs: string[]) {
+export async function getTodos(todoIDs: string[]) {
   if (todoIDs.length === 0) return [];
   const todoRowStatementQuery = db
     .select({
@@ -231,7 +240,7 @@ export function getTodos(todoIDs: string[]) {
     .where(inArray(item.id, todoIDs))
     .prepare();
 
-  const todoRows = todoRowStatementQuery.all();
+  const todoRows = await todoRowStatementQuery.execute();
 
   const todos = todoRows.map((row) => {
     const todoToGet: Todo = {
@@ -247,17 +256,20 @@ export function getTodos(todoIDs: string[]) {
   return todos;
 }
 
-function mustGetTodo(id: string): Todo {
-  const [todo] = getTodos([id]);
+async function mustGetTodo(id: string): Promise<Todo> {
+  const [todo] = await getTodos([id]);
   if (!todo) {
     throw new Error("Specified todo does not exist");
   }
   return todo;
 }
 
-export function updateTodo(userID: string, todoToUpdate: TodoUpdate): Affected {
-  const { listID } = mustGetTodo(todoToUpdate.id);
-  requireAccessToList(listID, userID);
+export async function updateTodo(
+  userID: string,
+  todoToUpdate: TodoUpdate,
+): Promise<Affected> {
+  const { listID } = await mustGetTodo(todoToUpdate.id);
+  await requireAccessToList(listID, userID);
   const { text = null, complete = null, sort = null, id } = todoToUpdate;
 
   const completeAsInteger = complete !== null ? Number(complete) : null;
@@ -274,7 +286,7 @@ export function updateTodo(userID: string, todoToUpdate: TodoUpdate): Affected {
     .where(eq(item.id, id))
     .prepare();
 
-  updateItemStatementQuery.run();
+  await updateItemStatementQuery.execute();
   addToQstash({ type: "updateTodo", data: todoToUpdate, userID });
 
   return {
@@ -283,21 +295,21 @@ export function updateTodo(userID: string, todoToUpdate: TodoUpdate): Affected {
   };
 }
 
-export function deleteTodo(
+export async function deleteTodo(
   userID: string,
   todoID: string,
   skipAccessCheck = false, // Todo: remove this check later once you have a fix
-): Affected {
-  const { listID } = mustGetTodo(todoID);
+): Promise<Affected> {
+  const { listID } = await mustGetTodo(todoID);
   if (!skipAccessCheck) {
-    requireAccessToList(listID, userID);
+    await requireAccessToList(listID, userID);
   }
   const deleteTodoStatementQuery = db
     .delete(item)
     .where(eq(item.id, todoID))
     .prepare();
 
-  deleteTodoStatementQuery.run();
+  await deleteTodoStatementQuery.execute();
   addToQstash({ type: "deleteTodo", data: { id: todoID }, userID });
 
   return {

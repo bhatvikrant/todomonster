@@ -5,7 +5,7 @@ import processPull from "~/app/pullActions";
 
 export async function POST(request: NextRequest) {
   const pull: PullRequestV1 = await request.json();
-  console.log("Processing pull", JSON.stringify(pull));
+  console.log("Processing pull...", JSON.stringify(pull));
 
   const t0 = Date.now();
   try {
