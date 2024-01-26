@@ -146,7 +146,7 @@ export default function HomePage() {
       <p className="px-8 text-center text-sm text-muted-foreground">
         By clicking continue, you agree to our{" "}
         <Link
-          href="/https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+          href="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
           className="underline underline-offset-4 hover:text-primary"
           target="_blank"
         >
@@ -154,7 +154,7 @@ export default function HomePage() {
         </Link>{" "}
         and{" "}
         <Link
-          href="/https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+          href="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
           className="underline underline-offset-4 hover:text-primary"
           target="_blank"
         >
