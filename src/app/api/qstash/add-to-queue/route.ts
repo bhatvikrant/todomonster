@@ -10,7 +10,7 @@ export async function POST(request: NextRequest) {
   const body = await request.json();
 
   const res = await client.publishJSON({
-    topic: "todomon-github-issue-manipulations",
+    topic: "todomon-github-issue-manipulations-prod",
     body,
   });
 
