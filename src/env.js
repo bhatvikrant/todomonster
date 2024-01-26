@@ -31,6 +31,7 @@ export const env = createEnv({
   client: {
     // NEXT_PUBLIC_CLIENTVAR: z.string(),
     NEXT_PUBLIC_REPLICACHE_LICENSE_KEY: z.string(),
+    NEXT_PUBLIC_ABLY_API_KEY: z.string(),
   },
 
   /**
@@ -47,6 +48,7 @@ export const env = createEnv({
     QSTASH_TOKEN: process.env.QSTASH_TOKEN,
     QSTASH_CURRENT_SIGNING_KEY: process.env.QSTASH_CURRENT_SIGNING_KEY,
     QSTASH_NEXT_SIGNING_KEY: process.env.QSTASH_NEXT_SIGNING_KEY,
+    NEXT_PUBLIC_ABLY_API_KEY: process.env.NEXT_PUBLIC_ABLY_API_KEY,
     // NEXT_PUBLIC_CLIENTVAR: process.env.NEXT_PUBLIC_CLIENTVAR,
   },
   /**

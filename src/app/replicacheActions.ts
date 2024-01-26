@@ -1,22 +1,22 @@
+/* eslint-disable @typescript-eslint/no-misused-promises */
 "use client";
 
-import Pusher from "pusher-js";
 import type { Replicache } from "replicache";
 import type { Mutators } from "@replicache/mutators";
+import Ably from "ably";
+import { env } from "~/env";
 
 export const listen = (rep: Replicache<Mutators> | null) => {
   if (rep) {
     console.log("👂 listening");
-    Pusher.logToConsole = true;
-    const pusher = new Pusher("app-key", {
-      cluster: "",
-      wsHost: "127.0.0.1",
-      wsPort: 6001,
-      forceTLS: false,
-      enabledTransports: ["ws", "wss"],
+
+    const ably = new Ably.Realtime.Promise({
+      key: env.NEXT_PUBLIC_ABLY_API_KEY,
     });
-    const channel = pusher.subscribe("default-channel");
-    channel.bind("poke-event", async () => {
+
+    const channel = ably.channels.get("todomonster-todos");
+
+    void channel.subscribe("poke-event", async () => {
       console.log("🫰 got poked");
       try {
         await rep.pull();

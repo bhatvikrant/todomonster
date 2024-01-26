@@ -1,6 +1,5 @@
 "use server";
 
-import Pusher from "pusher";
 import { eq } from "drizzle-orm";
 import type { MutationV1 } from "replicache";
 import type {
@@ -21,6 +20,8 @@ import {
 } from "./appActions";
 import db from "~/server/db";
 import { replicacheClient } from "~/server/db/schema";
+import Ably from "ably";
+import { env } from "~/env";
 
 function getClient(clientID: string): Omit<ClientRecord, "id"> {
   const clientRowStatementQuery = db
@@ -176,16 +177,9 @@ export async function processMutation(
 }
 
 export async function sendPoke() {
-  const pusher = new Pusher({
-    appId: "app-id",
-    key: "app-key",
-    secret: "app-secret",
-    useTLS: false,
-    cluster: "",
-    host: "127.0.0.1",
-    port: "6001",
-  });
-  void pusher.trigger("default-channel", "poke-event", {});
+  const ably = new Ably.Rest(env.NEXT_PUBLIC_ABLY_API_KEY);
+
+  ably.channels.get(`todomonster-todos`).publish("poke-event");
   const t0 = Date.now();
   console.log("👉 Sent poke in", Date.now() - t0);
 }
