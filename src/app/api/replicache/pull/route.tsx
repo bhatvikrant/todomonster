@@ -13,7 +13,7 @@ export async function POST(request: NextRequest) {
       nextUrl: { searchParams },
     } = request;
     const userID = searchParams.get("userID") ?? "";
-    const body = processPull(pull, userID);
+    const body = await processPull(pull, userID);
     const response = NextResponse.json(body);
     return response;
   } catch (error: unknown) {
