@@ -146,15 +146,17 @@ export default function HomePage() {
       <p className="px-8 text-center text-sm text-muted-foreground">
         By clicking continue, you agree to our{" "}
         <Link
-          href="/terms"
+          href="/https://www.youtube.com/watch?v=dQw4w9WgXcQ"
           className="underline underline-offset-4 hover:text-primary"
+          target="_blank"
         >
           Terms of Service
         </Link>{" "}
         and{" "}
         <Link
-          href="/privacy"
+          href="/https://www.youtube.com/watch?v=dQw4w9WgXcQ"
           className="underline underline-offset-4 hover:text-primary"
+          target="_blank"
         >
           Privacy Policy
         </Link>
