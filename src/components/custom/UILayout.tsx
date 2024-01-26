@@ -1,4 +1,4 @@
-import { Check, GithubIcon } from "lucide-react";
+import { Check, GithubIcon, Presentation } from "lucide-react";
 import Link from "next/link";
 import getRandomQuote from "~/lib/quotes";
 import clsx from "clsx";
@@ -52,6 +52,14 @@ const UILayout = ({ children }: { children: React.ReactNode }) => {
               >
                 <GithubIcon className="inline h-5 w-5" />{" "}
                 <span>View Source code</span>
+              </Link>
+              <Link
+                href="https://docs.google.com/presentation/d/1dVODBTYdKr3L7N0nyW4RmIMngPWY45VP9lDBhg7zIiU/edit#slide=id.g2b34537e757_0_80"
+                className="flex items-center  gap-2 underline-offset-4 opacity-30 transition-all duration-300 hover:underline hover:opacity-100"
+                target="_blank"
+              >
+                <Presentation className="inline h-5 w-5" />{" "}
+                <span>View Slides</span>
               </Link>
             </div>
           </div>
