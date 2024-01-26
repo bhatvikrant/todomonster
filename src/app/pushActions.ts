@@ -23,7 +23,7 @@ import { replicacheClient } from "~/server/db/schema";
 import Ably from "ably";
 import { env } from "~/env";
 
-function getClient(clientID: string): Omit<ClientRecord, "id"> {
+async function getClient(clientID: string): Promise<Omit<ClientRecord, "id">> {
   const clientRowStatementQuery = db
     .select({
       clientGroupID: replicacheClient.clientGroupID,
@@ -34,7 +34,7 @@ function getClient(clientID: string): Omit<ClientRecord, "id"> {
     .where(eq(replicacheClient.id, clientID))
     .prepare();
 
-  const clientRow = clientRowStatementQuery.get() ?? {
+  const clientRow = (await clientRowStatementQuery.execute())[0] ?? {
     clientGroupID: "",
     lastMutationID: 0,
     clientVersion: 0,
@@ -43,8 +43,8 @@ function getClient(clientID: string): Omit<ClientRecord, "id"> {
   return clientRow;
 }
 
-function getClientForUpdate(clientID: string): ClientRecord {
-  const previousClient = getClient(clientID);
+async function getClientForUpdate(clientID: string): Promise<ClientRecord> {
+  const previousClient = await getClient(clientID);
   return {
     id: clientID,
     clientGroupID: previousClient.clientGroupID,
@@ -56,15 +56,21 @@ function getClientForUpdate(clientID: string): ClientRecord {
 function mutate(userID: string, mutation: MutationV1): Affected {
   switch (mutation.name) {
     case "createList":
-      return createList(userID, mutation.args as ReplicacheList);
+      return createList(
+        userID,
+        mutation.args as ReplicacheList,
+      ) as unknown as Affected;
     case "deleteList":
-      return deleteList(userID, mutation.args as string);
+      return deleteList(userID, mutation.args as string) as unknown as Affected;
     case "createTodo":
-      return createTodo(userID, mutation.args as Omit<Todo, "sort">);
+      return createTodo(
+        userID,
+        mutation.args as Omit<Todo, "sort">,
+      ) as unknown as Affected;
     case "updateTodo":
-      return updateTodo(userID, mutation.args as Todo);
+      return updateTodo(userID, mutation.args as Todo) as unknown as Affected;
     case "deleteTodo":
-      return deleteTodo(userID, mutation.args as string);
+      return deleteTodo(userID, mutation.args as string) as unknown as Affected;
     default:
       return {
         listIDs: [],
@@ -73,7 +79,7 @@ function mutate(userID: string, mutation: MutationV1): Affected {
   }
 }
 
-function putClient(client: ClientRecord) {
+async function putClient(client: ClientRecord) {
   const { id, clientGroupID, lastMutationID, clientVersion } = client;
   const insertClientStatementQuery = db
     .insert(replicacheClient)
@@ -84,8 +90,7 @@ function putClient(client: ClientRecord) {
       clientVersion,
       lastModified: new Date(),
     })
-    .onConflictDoUpdate({
-      target: replicacheClient.id,
+    .onDuplicateKeyUpdate({
       set: {
         lastMutationID,
         clientVersion,
@@ -94,7 +99,7 @@ function putClient(client: ClientRecord) {
     })
     .prepare();
 
-  insertClientStatementQuery.run();
+  await insertClientStatementQuery.execute();
 }
 
 export async function processMutation(
@@ -109,8 +114,8 @@ export async function processMutation(
     JSON.stringify(mutation, null, ""),
   );
 
-  const baseClientGroup = getClientGroupForUpdate(clientGroupID);
-  const baseClient = getClientForUpdate(mutation.clientID);
+  const baseClientGroup = await getClientGroupForUpdate(clientGroupID);
+  const baseClient = await getClientForUpdate(mutation.clientID);
 
   console.log("baseClientGroup", { baseClientGroup }, "baseClient", {
     baseClient,
@@ -170,8 +175,8 @@ export async function processMutation(
     clientVersion: nextClientVersion,
   };
 
-  putClientGroup(nextClientGroup);
-  putClient(nextClient);
+  await putClientGroup(nextClientGroup);
+  await putClient(nextClient);
 
   return { affected };
 }

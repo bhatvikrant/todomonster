@@ -4,8 +4,9 @@ import { env } from "~/env.js";
 
 export default {
   schema: "./src/server/db/schema.ts",
-  driver: "better-sqlite",
+  driver: "mysql2",
   dbCredentials: {
-    url: env.DATABASE_URL,
+    uri: env.DATABASE_URL,
   },
+  tablesFilter: ["todomonster_*"],
 } satisfies Config;

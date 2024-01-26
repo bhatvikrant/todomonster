@@ -17,7 +17,7 @@ export async function POST(request: NextRequest) {
     } = request;
     const userID = searchParams.get("userID") ?? "";
     const push: PushRequestV1 = await request.json();
-    console.log("Processing push", JSON.stringify(push));
+    console.log("Processing push...", JSON.stringify(push));
     t0 = Date.now();
 
     push.mutations.forEach(async (mutation: MutationV1) => {

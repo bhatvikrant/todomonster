@@ -58,7 +58,10 @@ function getBaseCVR(clientGroupID: string, cookie: Cookie) {
   return { previousCVR, baseCVR };
 }
 
-function searchClients(clientGroupID: string, sinceClientVersion: number) {
+async function searchClients(
+  clientGroupID: string,
+  sinceClientVersion: number,
+) {
   const clientRowStatementQuery = db
     .select({
       id: replicacheClient.id,
@@ -74,7 +77,7 @@ function searchClients(clientGroupID: string, sinceClientVersion: number) {
     )
     .prepare();
 
-  const clientRows = clientRowStatementQuery.all();
+  const clientRows = await clientRowStatementQuery.execute();
 
   const clients = clientRows.map((row) => {
     const client: ClientRecord = {
@@ -95,25 +98,28 @@ function fromSearchResult(result: SearchResult[]): Map<string, number> {
   return data;
 }
 
-function pullForChanges(
+async function pullForChanges(
   clientGroupID: string,
   baseCVR: ClientViewRecord,
   userID: string,
   cookie: Cookie,
-): {
+): Promise<{
   nextCVRVersion: number;
   nextCVR: ClientViewRecord;
   clientChanges: ClientRecord[];
   lists: List[];
   todos: Todo[];
-} {
-  const baseClientGroupRecord = getClientGroupForUpdate(clientGroupID);
-  const clientChanges = searchClients(clientGroupID, baseCVR.clientVersion);
-  const listMeta = searchLists(userID);
+}> {
+  const baseClientGroupRecord = await getClientGroupForUpdate(clientGroupID);
+  const clientChanges = await searchClients(
+    clientGroupID,
+    baseCVR.clientVersion,
+  );
+  const listMeta = await searchLists(userID);
 
   const listIDs = listMeta.map((listRow) => listRow.id);
 
-  const { todoMeta } = searchTodosAndShares(listIDs);
+  const { todoMeta } = await searchTodosAndShares(listIDs);
 
   const nextCVR: ClientViewRecord = {
     list: fromSearchResult(listMeta),
@@ -151,9 +157,9 @@ function pullForChanges(
     nextClientGroupRecord,
   });
 
-  const lists = getLists(listPuts);
-  const todos = getTodos(todoPuts);
-  putClientGroup(nextClientGroupRecord);
+  const lists = await getLists(listPuts);
+  const todos = await getTodos(todoPuts);
+  await putClientGroup(nextClientGroupRecord);
 
   return {
     nextCVRVersion: nextClientGroupRecord.cvrVersion,
@@ -197,13 +203,16 @@ function getPatch(
   return patch;
 }
 
-function processPull(pull: PullRequestV1, userID: string): PullResponseV1 {
+async function processPull(
+  pull: PullRequestV1,
+  userID: string,
+): Promise<PullResponseV1> {
   const { clientGroupID, cookie } = pull;
   const replicacheCookie = cookie as Cookie;
   const { previousCVR, baseCVR } = getBaseCVR(clientGroupID, replicacheCookie);
 
   const { nextCVRVersion, nextCVR, clientChanges, lists, todos } =
-    db.transaction(() =>
+    await db.transaction(() =>
       pullForChanges(clientGroupID, baseCVR, userID, replicacheCookie),
     );
 
