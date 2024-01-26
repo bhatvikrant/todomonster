@@ -9,10 +9,17 @@ const client = new Client({ token: env.QSTASH_TOKEN });
 export async function POST(request: NextRequest) {
   const body = await request.json();
 
-  const res = await client.publishJSON({
-    topic: "todomon-github-issue-manipulations-prod",
-    body,
-  });
+  try {
+    const res = await client.publishJSON({
+      topic: "todomon-github-issue-manipulations-prod",
+      body,
+    });
 
-  return NextResponse.json({ ...res }, { status: 200 });
+    return NextResponse.json({ ...res }, { status: 200 });
+  } catch (error) {
+    console.error((error as Error).message);
+    return new Response(JSON.stringify({ message: (error as Error).message }), {
+      status: 500,
+    });
+  }
 }
