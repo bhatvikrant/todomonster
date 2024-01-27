@@ -8,20 +8,6 @@ Install the application dependencies:
 bun install
 ```
 
-### 🔌 Start Your Soketi Server
-
-Install the Soketi command line:
-
-```bash
-bun install -g @soketi/soketi
-```
-
-Then, run the local Soketi server:
-
-```bash
-soketi start
-```
-
 ### 🔑 Generate your Replicache License Key
 
 Run the command:
@@ -52,13 +38,7 @@ Run the command:
 bun dev
 ```
 
-Ensure that the host and port is of the same in the Soketi server as the NextJS application.
-
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
-
-## 🔌 Why Soketi
-
-I'm using [Soketi](https://soketi.app/) for our web socket service to send and receive pokes. When we push data, send a poke to notify all other applications to pull for the updated data.
 
 # Create T3 App
 
