@@ -53,24 +53,18 @@ async function getClientForUpdate(clientID: string): Promise<ClientRecord> {
   };
 }
 
-function mutate(userID: string, mutation: MutationV1): Affected {
+async function mutate(userID: string, mutation: MutationV1): Promise<Affected> {
   switch (mutation.name) {
     case "createList":
-      return createList(
-        userID,
-        mutation.args as ReplicacheList,
-      ) as unknown as Affected;
+      return createList(userID, mutation.args as ReplicacheList);
     case "deleteList":
-      return deleteList(userID, mutation.args as string) as unknown as Affected;
+      return deleteList(userID, mutation.args as string);
     case "createTodo":
-      return createTodo(
-        userID,
-        mutation.args as Omit<Todo, "sort">,
-      ) as unknown as Affected;
+      return createTodo(userID, mutation.args as Omit<Todo, "sort">);
     case "updateTodo":
-      return updateTodo(userID, mutation.args as Todo) as unknown as Affected;
+      return updateTodo(userID, mutation.args as Todo);
     case "deleteTodo":
-      return deleteTodo(userID, mutation.args as string) as unknown as Affected;
+      return deleteTodo(userID, mutation.args as string);
     default:
       return {
         listIDs: [],
@@ -152,7 +146,7 @@ export async function processMutation(
   if (error === undefined) {
     console.log("Processing mutation:", JSON.stringify(mutation));
     try {
-      affected = mutate(userID, mutation);
+      affected = await mutate(userID, mutation);
     } catch (mutateError: unknown) {
       // TODO: You can store state here in the database to return to clients to
       // provide additional info about errors.
